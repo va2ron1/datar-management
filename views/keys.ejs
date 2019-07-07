@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en"><head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="Mark Otto, Jacob Thornton, and Bootstrap contributors">
+    <meta name="generator" content="Jekyll v3.8.5">
+    <title>Api Keys | Datar</title>
+
+    <link rel="canonical" href="https://getbootstrap.com/docs/4.3/examples/sign-in/">
+
+    <!-- Bootstrap core CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+
+    <style></style>
+    <!-- Custom styles for this template -->
+    <link href="/css/loginSignup.css" rel="stylesheet">
+    <style>
+    body {
+      background-color: #f5f5f5;
+    }
+
+    .container {
+      padding-top: 40px;
+      padding-bottom: 40px;
+    }
+    </style>
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+      <img src="/img/logo.png" width="30" height="30" alt="">
+      <a class="navbar-brand" href="#">Datar</a>
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarText" aria-controls="navbarText" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarText">
+        <ul class="navbar-nav mr-auto">
+        </ul>
+        <ul class="navbar-nav">
+          <li class="nav-item active">
+            <a href="/logout" class="btn btn-outline-danger" role="button">Logout</a>
+          </li>
+        </ul>
+      </div>
+    </nav>
+    <div class="container h-100">
+      <div class="row align-items-center h-100">
+          <div class="col-6 mx-auto">
+            <% if (locals.errors) { %>
+              <div class="alert alert-danger" role="alert">
+                <%- locals.errors %>
+              </div>
+            <% } %>
+            <% if (locals.middle) { %>
+              <div class="alert alert-dark" role="alert">
+                <%- locals.middle %>
+              </div>
+            <% } %>
+            <% if (locals.success) { %>
+              <div class="alert alert-success" role="alert">
+                <%- locals.success %>
+              </div>
+            <% } %>
+            <nav class="navbar navbar-light bg-light mb-3">
+              <span class="navbar-brand mb-0 h1">Keys</span>
+              <ul class="navbar-nav mr-auto">
+              </ul>
+              <ul class="navbar-nav">
+                <li class="nav-item active">
+                  <form method="post" action="/key/create">
+                    <button class="btn btn-outline-success" role="button">Get New Key</button>
+                  </form>
+                </li>
+              </ul>
+            </nav>
+            <% for (var i = 0; i < keys.length; i++) { %>
+            <div class="card mb-3">
+              <div class="card-body">
+                <small class="text-muted" >Created <%= timeSince(keys[i].createdAt) %> ago</small>
+                <p id="<%= keys[i].key %>"><%= keys[i].key %></p>
+                <form method="post" action="/key/delete">
+                  <a href="#" onclick="copyToClipboard('<%= keys[i].key %>')" class="btn btn-outline-primary" role="button">Copy to clipboard</a>
+                  <input type="hidden" id="key" name="key" value="<%= keys[i].key %>">
+                  <button class="btn btn-danger" role="button">Destroy</button>
+                </form>
+              </div>
+            </div>
+            <% } %>
+          </div>
+      </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+    <script>
+      function copyToClipboard(key) {
+        var textArea = document.createElement("textarea");
+
+        textArea.value = key;
+
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+
+        try {
+          document.execCommand('copy');
+        } catch (err) {}
+
+        document.body.removeChild(textArea);
+      }
+    </script>
+  </body>
+</html>
