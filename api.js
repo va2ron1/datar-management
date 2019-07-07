@@ -83,20 +83,72 @@ app.post('/api/data/:auth_key', (req, res, next) => {
           naturalLanguageUnderstanding.analyze(analyzeParams)
             .then(analysisResults => {
               axios.put('http://localhost:9200/watson/_doc/1?pretty', {
+                createdAt: Math.floor(Date.now() / 1000),
                 data: origData,
                 result: analysisResults
               })
-              .then((res) => {
-                console.log(`statusCode: ${res.statusCode}`)
-                console.log(res)
-              })
-              .catch((error) => {
-                console.error(error)
-              })
+              .then((res) => {})
+              .catch((error) => {})
             })
             .catch(err => {});
         })
         return res.out(200, undefined, response.rows);
+      } else {
+        return res.out(400, undefined, "API Key doesn't exist");
+      }
+    })
+    .catch(err => {
+      return res.out(400, undefined, "Something wrong with the server");
+    });
+  } else {
+    return res.out(400, {
+      "errors": [
+        {
+            "msg": "api key required",
+            "param": "auth_key"
+        }
+      ]
+    }, undefined);
+  }
+})
+
+app.get('/v1/data/:auth_key', (req, res, next) => {
+  if (req.params.auth_key) {
+    if (!req.query.search) {
+      return res.out(400, {
+        "errors": [
+          {
+              "msg": "search required",
+              "param": "search"
+          }
+        ]
+      }, undefined);
+    }
+    db.query('select key from auth_keys where key = \'' + req.params.auth_key + '\'')
+    .then(response => {
+      if (response.rowCount > 0) {
+        axios.post('http://localhost:9200/watson/_search?filter_path=hits.hits._source.data&pretty=true', {
+           "_source": {
+              "includes": ["data"]
+           },
+           "query":{
+              "bool":{
+                 "filter":[
+                    {
+                       "match":{
+                          "result.keywords.text": req.query.search
+                       }
+                    }
+                 ]
+              }
+           }
+        })
+        .then((response) => {
+          return res.out(200, response.data.hits.hits);
+        })
+        .catch((error) => {
+          return res.out(400, undefined, "Something wrong with the server");
+        })
       } else {
         return res.out(400, undefined, "API Key doesn't exist");
       }
