@@ -24,14 +24,13 @@ app.post('/search', [
   }
 
   let search = req.body.search;
-  axios.get('https://api.datar.online/v1/data/NjhjMWQ2ZTMtMDA3Ny00MDcxLWJiOTUtMWFkOTM5YTc3ZGUz?search=' + search)
+  axios.get('http://datar.com/v1/data/YTkwMDVkYjEtNDY5Zi00ZGJiLThmNDUtYzA1NzgxMzgyMDcz?search=' + search)
   .then((response) => {
     console.log(response);
     return res.render('demo', {results: response.data.data});
   })
   .catch((error) => {
-    console.log(error);
-    return res.render('demo', {errors: "Something wrong try again later."})
+    return res.render('demo', {errors: error.response.data['message'] || "Something wrong try again later."})
   })
 
 })
@@ -46,7 +45,7 @@ app.post('/postData', [
   }
 
   let data = req.body.data;
-  axios.post('https://api.datar.online/v1/data/NjhjMWQ2ZTMtMDA3Ny00MDcxLWJiOTUtMWFkOTM5YTc3ZGUz', {
+  axios.post('http://datar.com/v1/data/YTkwMDVkYjEtNDY5Zi00ZGJiLThmNDUtYzA1NzgxMzgyMDcz', {
 	   "data": data
   })
   .then((response) => {

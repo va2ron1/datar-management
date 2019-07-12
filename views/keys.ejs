@@ -25,6 +25,7 @@
       padding-top: 40px;
       padding-bottom: 40px;
     }
+
     </style>
   </head>
   <body>
@@ -46,7 +47,7 @@
     </nav>
     <div class="container h-100">
       <div class="row align-items-center h-100">
-          <div class="col-6 mx-auto">
+          <div class="col-xl-6 col-lg-6 col-md-12 mx-auto">
             <% if (locals.errors) { %>
               <div class="alert alert-danger" role="alert">
                 <%- locals.errors %>
@@ -74,15 +75,60 @@
                 </li>
               </ul>
             </nav>
+            <% if (keys.length === 0) { %>
+              <div class="card mb-3" id="<%= i %>-show">
+                <div class="card-body">
+                  No API Keys...
+                </div>
+              </div>
+            <% } %>
             <% for (var i = 0; i < keys.length; i++) { %>
-            <div class="card mb-3">
+            <form class="ml-auto d-none" id="<%= i %>-edit" method="post" action="/key/<%= keys[i].key %>/update">
+              <div class="card mb-3">
+                  <div class="card-header py-3 d-flex align-items-center">
+                      <div class="mr-auto"></div>
+                      <button class="btn btn-primary btn-sm mr-1" type="submit" role="button">Save</button>
+                      <button class="btn btn-danger btn-sm" type="button" role="button" onclick="toogleKey(<%= i %>)">Cancel</button>
+                  </div>
+                  <div class="card-body">
+                    <div class="form-group row">
+                      <label for="staticTitle" class="col-sm-2 col-form-label">Title</label>
+                      <div class="col-sm-10">
+                        <input type="text" class="form-control" id="staticTitle" name="title" placeholder="Application" value="<%= keys[i].title %>">
+                      </div>
+                    </div>
+                    <div class="form-group row">
+                      <div class="col-sm-12">
+                        <div class="custom-control custom-switch">
+                          <input type="checkbox" class="custom-control-input" id="staticToogle-<%= i %>" name="enabled" <%- keys[i].enabled == true ? 'checked' : '' %>>
+                          <label class="custom-control-label" for="staticToogle-<%= i %>">Enabled</label>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+              </div>
+            </form>
+            <div class="card mb-3" id="<%= i %>-show">
+              <div class="card-header py-3 d-flex align-items-center">
+                <h6 class="mb-0 text-muted"><%= keys[i].title %></h6>
+                <% if (keys[i].enabled) {  %>
+                  <span class="badge badge-success ml-1 px-2">Enabled</span>
+                <% } else {  %>
+                  <span class="badge badge-danger ml-1 px-2">Disabled</span>
+                <% } %>
+                <button class="ml-auto btn btn-info btn-sm" role="button" onclick="toogleKey(<%= i %>)">Edit</button>
+              </div>
               <div class="card-body">
                 <small class="text-muted" >Created <%= timeSince(keys[i].createdAt) %> ago</small>
                 <p id="<%= keys[i].key %>"><%= keys[i].key %></p>
                 <form method="post" action="/key/delete">
                   <a href="#" onclick="copyToClipboard('<%= keys[i].key %>')" class="btn btn-outline-primary" role="button">Copy to clipboard</a>
                   <input type="hidden" id="key" name="key" value="<%= keys[i].key %>">
-                  <button class="btn btn-danger" role="button">Destroy</button>
+                  <% if (keys[i].enabled) {  %>
+                    <button class="btn btn-danger" role="button" disabled title='Please disable key to destroy it'>Destroy</button>
+                  <% } else {  %>
+                    <button class="btn btn-danger" role="button">Destroy</button>
+                  <% } %>
                 </form>
               </div>
             </div>
@@ -108,6 +154,12 @@
         } catch (err) {}
 
         document.body.removeChild(textArea);
+      }
+      function toogleKey(id) {
+        var editElement = document.getElementById(id + '-edit');
+        var showElement = document.getElementById(id + '-show');
+        editElement.classList.toggle("d-none");
+        showElement.classList.toggle("d-none");
       }
     </script>
   </body>

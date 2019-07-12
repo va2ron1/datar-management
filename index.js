@@ -1,15 +1,20 @@
 var crypto = require('crypto');
 var express = require('express');
 var session = require('express-session');
+var SequelizeStore = require('connect-session-sequelize')(session.Store);
+const Sequelize = require('sequelize');
 const path = require('path');
 const { body, check, validationResult } = require('express-validator');
 const { Pool } = require('pg');
 const axios = require('axios');
+const dotenv = require('dotenv');
+dotenv.config();
+
 const NaturalLanguageUnderstandingV1 = require('ibm-watson/natural-language-understanding/v1.js');
 const naturalLanguageUnderstanding = new NaturalLanguageUnderstandingV1({
-  version: '2018-11-16',
-  iam_apikey: '',
-  url: 'https://gateway.watsonplatform.net/natural-language-understanding/api'
+  version: process.env.IBM_WATSON_VERSION,
+  iam_apikey: process.env.IBM_WATSON_API_KEY,
+  url: process.env.IBM_WATSON_URL
 });
 
 var app = express();
@@ -27,10 +32,10 @@ let base64 = exports = {
 
 // Database
 const connectionData = {
-  user: 'postgres',
-  host: 'localhost',
-  database: 'datar',
-  password: '',
+  user: process.env.POSTGRES_USER,
+  host: process.env.POSTGRES_HOST,
+  database: process.env.POSTGRES_DB,
+  password: process.env.POSTGRES_PASSWORD,
   port: 5432,
 };
 let db = new Pool(connectionData);
@@ -57,22 +62,38 @@ app.use(express.static('public'))
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
+
+// create database, ensure 'sqlite3' in your package.json
+var sequelize = new Sequelize(
+  process.env.POSTGRES_DB,
+  process.env.POSTGRES_USER,
+  process.env.POSTGRES_PASSWORD,
+  {
+    "host": process.env.POSTGRES_HOST,
+    "dialect": "postgres",
+    "logging": false
+  }
+);
+
+var sequelizeStore = new SequelizeStore({
+    db: sequelize
+})
+
 // Session initializer
 app.use(session({
   secret: 'keyboard cat',
-  cookie: { maxAge: 60000 },
+  store: sequelizeStore,
+  cookie: { maxAge: 60 * 60 * 1000 },
   resave: false,
   saveUninitialized: true,
 }))
 
+sequelizeStore.sync()
 
 // responses base
 var responses = function (req, res, next) {
   res.out = (statusCode, json, msg) => {
-    // res.status(statusCode);
-    // console.log(res.statusMessage);
-    // res.json({status: res.statusMessage, data: json, message: msg});
-    res.writeHead(statusCode, {'Content-Type': 'application/json', 'X-Powered-By': 'Data API Service'});
+    res.writeHead(statusCode, {'Content-Type': 'application/json', 'X-Powered-By': 'Datar API Service'});
     res.end(JSON.stringify({status: res.statusMessage, data: json, message: msg}));
   };
 
@@ -216,12 +237,11 @@ app.get('/keys', (req, res, next) => {
     delete req.session.success;
     delete req.session.middle;
 
-    db.query('select "createdAt", key from auth_keys where "user" = \'' + req.session.user + '\'')
+    db.query('select "createdAt", key, title, enabled from auth_keys where "user" = \'' + req.session.user + '\' order by "createdAt" desc')
     .then(response => {
       return res.render('keys', {errors: error, success: success, middle: middle, timeSince: timeSince, keys: response.rows});
     })
     .catch(err => {
-      console.log(err);
       return res.render('login', {errors: "Something wrong with the server"});
     });
   } else {
@@ -231,7 +251,7 @@ app.get('/keys', (req, res, next) => {
 
 app.post('/key/create', (req, res, next) => {
   if (req.session.user) {
-    db.query('insert into auth_keys ("user", key) values(\'' + req.session.user + '\', \'' + key_generator() + '\')')
+    db.query('insert into auth_keys ("user", key, title) values(\'' + req.session.user + '\', \'' + key_generator() + '\', \'New App\')')
     .then(response => {
       req.session.success = "Successfully key created";
       return res.redirect('/keys');
@@ -258,12 +278,48 @@ app.post('/key/delete', [
 
     let key = req.body.key;
 
-    let sql = 'DELETE FROM "auth_keys" WHERE ctid = (SELECT ctid FROM "auth_keys" WHERE "key" = \'' + key + '\' and "user" = ' + req.session.user + ' LIMIT 1)';
+    let sql = 'DELETE FROM "auth_keys" WHERE ctid = (SELECT ctid FROM "auth_keys" WHERE "key" = \'' + key + '\' and "user" = ' + req.session.user + ' and enabled = false LIMIT 1)';
 
     db.query(sql)
     .then(response => {
       if (response.rowCount > 0) {
         req.session.success = "Successfully key deleted";
+        return res.redirect('/keys');
+      } else {
+        req.session.error = "Key doesn't exist, belong to your account or is disabled";
+        return res.redirect('/keys');
+      }
+    })
+    .catch(err => {
+      req.session.error = "Something wrong with the server";
+      return res.redirect('/keys');
+    });
+  } else {
+    return res.redirect('/login');
+  }
+})
+
+app.post('/key/:auth_key/update', [
+  // key must be exist
+  check('title').isLength({min: 1, max: 25})
+], (req, res, next) => {
+  if (req.session.user && req.params.auth_key) {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      req.session.error = "Please input a title (min: 1, max: 25)";
+      return res.redirect('/keys');
+    }
+
+    let key = req.params.auth_key,
+        title = req.body.title,
+        enabled = req.body.enabled;
+
+    let sql = 'UPDATE auth_keys SET enabled = ' + (enabled == 'on' ? 'true' : 'false') + ', title = \'' + title + '\' WHERE "key" = \'' + key + '\' and "user" = ' + req.session.user;
+
+    db.query(sql)
+    .then(response => {
+      if (response.rowCount > 0) {
+        req.session.success = "Successfully enabled the key";
         return res.redirect('/keys');
       } else {
         req.session.error = "Key doesn't exist or belong to your account";
