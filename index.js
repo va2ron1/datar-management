@@ -71,7 +71,7 @@ var sequelizeStore = new SequelizeStore({
 
 // Session initializer
 app.use(session({
-  secret: 'keyboard cat',
+  secret: process.env.SESSION_SECRET,
   store: sequelizeStore,
   cookie: { maxAge: 60 * 60 * 1000 },
   resave: false,
