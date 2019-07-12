@@ -39,16 +39,6 @@ const connectionData = {
   port: 5432,
 };
 let db = new Pool(connectionData);
-db.sendQuery = (query) => {
-  return new Promise((next, error) => {
-    pool.query(query, [], (err, result) => {
-      if (err)
-        error(err);
-      else
-        next(result);
-    });
-  });
-};
 
 // Api Key generator
 key_generator = () => {
@@ -122,6 +112,15 @@ function timeSince(createdAt) {
       return day + " " + month + year;
   }
 }
+
+
+// Key status
+// 0 = created
+// 1 = disable
+// 2 = enable
+// 3 = delete
+// 4 = name changed
+
 app.get('/signup', (req, res, next) => {
   res.render('signup');
 })
@@ -143,7 +142,7 @@ app.post('/signup', [
 ], (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    return res.render('signup', {errors: "Please input all fields"});
+    return res.render('signup', {errors: errors.errors[0].msg});
   }
 
   let email = req.body.email;
@@ -249,14 +248,37 @@ app.get('/keys', (req, res, next) => {
   }
 })
 
+let history_method = (req, res, next) => {
+  if (req.session.user) {
+    let auth_key = '';
+    if (req.params.auth_key)
+      auth_key = 'and key = \'' + req.params.auth_key + '\'';
+    db.query('select "createdAt", key, status, "user", "from" from history where "user" = \'' + req.session.user + '\' ' + auth_key + ' order by "createdAt" desc')
+    .then(response => {
+      return res.render('history', {histories: response.rows});
+    })
+    .catch(err => {
+      return res.render('login', {errors: "Something wrong with the server"});
+    });
+  } else {
+    return res.redirect('/login');
+  }
+}
+
+app.get('/history/:auth_key', history_method);
+app.get('/history', history_method)
+
 app.post('/key/create', (req, res, next) => {
   if (req.session.user) {
-    db.query('insert into auth_keys ("user", key, title) values(\'' + req.session.user + '\', \'' + key_generator() + '\', \'New App\')')
-    .then(response => {
+    let key = key_generator();
+    db.query('insert into auth_keys ("user", key, title) values(\'' + req.session.user + '\', \'' + key + '\', \'New App\')')
+    .then(async response => {
+      await db.query('insert into history ("user", key, status) values(\'' + req.session.user + '\', \'' + key + '\', 0)');
       req.session.success = "Successfully key created";
       return res.redirect('/keys');
     })
     .catch(err => {
+      console.log(err);
       req.session.error = "Something wrong with the server";
       return res.redirect('/keys');
     });
@@ -281,8 +303,9 @@ app.post('/key/delete', [
     let sql = 'DELETE FROM "auth_keys" WHERE ctid = (SELECT ctid FROM "auth_keys" WHERE "key" = \'' + key + '\' and "user" = ' + req.session.user + ' and enabled = false LIMIT 1)';
 
     db.query(sql)
-    .then(response => {
+    .then(async response => {
       if (response.rowCount > 0) {
+        await db.query('insert into history ("user", key, status) values(\'' + req.session.user + '\', \'' + key + '\', 3)');
         req.session.success = "Successfully key deleted";
         return res.redirect('/keys');
       } else {
@@ -302,7 +325,7 @@ app.post('/key/delete', [
 app.post('/key/:auth_key/update', [
   // key must be exist
   check('title').isLength({min: 1, max: 25})
-], (req, res, next) => {
+], async (req, res, next) => {
   if (req.session.user && req.params.auth_key) {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -314,12 +337,19 @@ app.post('/key/:auth_key/update', [
         title = req.body.title,
         enabled = req.body.enabled;
 
+    let auth_key_old_data = await db.query('select title, enabled from auth_keys where key = \'' + req.params.auth_key + '\'');
+
     let sql = 'UPDATE auth_keys SET enabled = ' + (enabled == 'on' ? 'true' : 'false') + ', title = \'' + title + '\' WHERE "key" = \'' + key + '\' and "user" = ' + req.session.user;
 
     db.query(sql)
-    .then(response => {
+    .then(async response => {
       if (response.rowCount > 0) {
-        req.session.success = "Successfully enabled the key";
+        if (auth_key_old_data.rows[0].title !== title)
+          await db.query('insert into history ("user", key, status, "from") values(\'' + req.session.user + '\', \'' + key + '\', 4, \'\"' + auth_key_old_data.rows[0].title + '\"\')');
+        if ((enabled == 'on' ? true : false) !== auth_key_old_data.rows[0].enabled)
+          await db.query('insert into history ("user", key, status, "from") values(\'' + req.session.user + '\', \'' + key + '\', ' + (enabled == 'on' ? '2' : '1') + ', \'\"' + auth_key_old_data.rows[0].enabled + '\"\')');
+
+        req.session.success = "Successfully updated the key";
         return res.redirect('/keys');
       } else {
         req.session.error = "Key doesn't exist or belong to your account";

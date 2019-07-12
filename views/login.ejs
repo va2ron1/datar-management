@@ -38,6 +38,11 @@
           <%- locals.errors %>
         </div>
       <% } %>
+      <% if (locals.success) { %>
+        <div class="alert alert-success" role="alert">
+          <%- locals.success %>
+        </div>
+      <% } %>
       <img class="mb-4" src="/img/logo.png" alt="" width="72" height="72">
       <h1 class="h3 mb-3 font-weight-normal">Please sign in</h1>
       <label for="inputEmail" class="sr-only">Email address</label>

@@ -5,7 +5,7 @@
     <meta name="description" content="">
     <meta name="author" content="Mark Otto, Jacob Thornton, and Bootstrap contributors">
     <meta name="generator" content="Jekyll v3.8.5">
-    <title>API Keys Management | Datar</title>
+    <title>History | Datar</title>
 
     <link rel="canonical" href="https://getbootstrap.com/docs/4.3/examples/sign-in/">
 
@@ -67,6 +67,10 @@
       background-color: rgba(208, 10, 22, 0.72);
     }
 
+    .key-title {
+      font-size: 0.8rem;
+    }
+
     </style>
   </head>
   <body>
@@ -83,7 +87,7 @@
           <li class="nav-item">
             <a href="/keys" class="btn btn-info" role="button">API Keys</a>
           </li>
-          <li class="nav-item left-sub-item">
+          <li class="nav-item left-sub-item active">
             <a href="/history" class="btn btn-info" role="button">History</a>
           </li>
           <li class="nav-item right-sub-item">
@@ -94,92 +98,67 @@
     </nav>
     <div class="container h-100">
       <div class="row align-items-center h-100">
-          <div class="col-xl-8 col-lg-8 col-md-12 mx-auto">
-            <% if (locals.errors) { %>
-              <div class="alert alert-danger" role="alert">
-                <%- locals.errors %>
-              </div>
-            <% } %>
-            <% if (locals.middle) { %>
-              <div class="alert alert-dark" role="alert">
-                <%- locals.middle %>
-              </div>
-            <% } %>
-            <% if (locals.success) { %>
-              <div class="alert alert-success" role="alert">
-                <%- locals.success %>
-              </div>
-            <% } %>
+          <div class="col-xl-10 col-lg-10 col-md-12 mx-auto">
             <nav class="navbar navbar-light bg-light mb-3">
-              <span class="navbar-brand mb-0 h1">Keys</span>
-              <ul class="navbar-nav mr-auto">
-              </ul>
-              <ul class="navbar-nav">
-                <li class="nav-item active">
-                  <form method="post" action="/key/create">
-                    <button class="btn btn-outline-success" role="button">Get New Key</button>
-                  </form>
-                </li>
-              </ul>
+              <span class="navbar-brand mb-0 h1">History</span>
             </nav>
-            <% if (keys.length === 0) { %>
+            <% if (histories.length === 0) { %>
               <div class="card mb-3" id="<%= i %>-show">
                 <div class="card-body">
-                  No API Keys...
+                  No Histories...
                 </div>
               </div>
             <% } %>
-            <% for (var i = 0; i < keys.length; i++) { %>
-            <form class="ml-auto d-none" id="<%= i %>-edit" method="post" action="/key/<%= keys[i].key %>/update">
-              <div class="card mb-3">
-                  <div class="card-header py-3 d-flex align-items-center">
-                      <div class="mr-auto"></div>
-                      <button class="btn btn-primary btn-sm mr-1" type="submit" role="button">Save</button>
-                      <button class="btn btn-danger btn-sm" type="button" role="button" onclick="toogleKey(<%= i %>)">Cancel</button>
-                  </div>
-                  <div class="card-body">
-                    <div class="form-group row">
-                      <label for="staticTitle" class="col-sm-2 col-form-label">Title</label>
-                      <div class="col-sm-10">
-                        <input type="text" class="form-control" id="staticTitle" name="title" placeholder="Application" value="<%= keys[i].title %>">
+            <% for (var i = 0; i < histories.length; i++) { %>
+                <% if (histories[i].status === 0) { %>
+                  <div class="card mb-3">
+                      <div class="card-header py-3 d-flex align-items-center">
+                        <div class="mb-0">Key has been created</div>
+                        <div class="mr-auto"></div>
+                        <span><%= (new Date(Math.floor(histories[i].createdAt))).toUTCString() %></span>
                       </div>
-                    </div>
-                    <div class="form-group row">
-                      <div class="col-sm-12">
-                        <div class="custom-control custom-switch">
-                          <input type="checkbox" class="custom-control-input" id="staticToogle-<%= i %>" name="enabled" <%- keys[i].enabled == true ? 'checked' : '' %>>
-                          <label class="custom-control-label" for="staticToogle-<%= i %>">Enabled</label>
-                        </div>
+                      <div class="card-body">
+                        <p class="key-title mb-0"><b>Key:</b> <%= histories[i].key %></p>
                       </div>
-                    </div>
                   </div>
-              </div>
-            </form>
-            <div class="card mb-3" id="<%= i %>-show">
-              <div class="card-header py-3 d-flex align-items-center">
-                <h6 class="mb-0 text-muted"><%= keys[i].title %></h6>
-                <% if (keys[i].enabled) {  %>
-                  <span class="badge badge-success ml-1 px-2">Enabled</span>
-                <% } else {  %>
-                  <span class="badge badge-danger ml-1 px-2">Disabled</span>
+                <% } else if (histories[i].status === 1 || histories[i].status === 2) { %>
+                  <div class="card mb-3">
+                      <div class="card-header py-3 d-flex align-items-center">
+                        <% if (histories[i].from === 'true') { %>
+                          <div class="mb-0">Key has been disabled <span class="h4" style="color: rgba(208, 10, 22, 0.72);">•</span></div>
+                        <% } else { %>
+                          <div class="mb-0">Key has been enabled <span class="h4" style="color: green;">•</span></div>
+                        <% } %>
+                        <div class="mr-auto"></div>
+                        <span><%= (new Date(Math.floor(histories[i].createdAt))).toUTCString() %></span>
+                      </div>
+                      <div class="card-body">
+                        <p class="key-title mb-0"><b>Key:</b> <%= histories[i].key %></p>
+                      </div>
+                  </div>
+                <% } else if (histories[i].status === 3) { %>
+                  <div class="card mb-3">
+                      <div class="card-header py-3 d-flex align-items-center">
+                        <div class="mb-0">Key has been deleted <span class="h4" style="color: rgba(208, 10, 22, 0.72);">•</span></div>
+                        <div class="mr-auto"></div>
+                        <span><%= (new Date(Math.floor(histories[i].createdAt))).toUTCString() %></span>
+                      </div>
+                      <div class="card-body">
+                        <p class="key-title mb-0"><b>Key:</b> <%= histories[i].key %></p>
+                      </div>
+                  </div>
+                <% } else if (histories[i].status === 4) { %>
+                  <div class="card mb-3">
+                      <div class="card-header py-3 d-flex align-items-center">
+                        <div class="mb-0">Key has been renamed from '<%= histories[i].from %>' <span class="h4" style="color: #f5d142;">•</span></div>
+                        <div class="mr-auto"></div>
+                        <span><%= (new Date(Math.floor(histories[i].createdAt))).toUTCString() %></span>
+                      </div>
+                      <div class="card-body">
+                        <p class="key-title mb-0"><b>Key:</b> <%= histories[i].key %></p>
+                      </div>
+                  </div>
                 <% } %>
-                <button class="ml-auto btn btn-info btn-sm" role="button" onclick="toogleKey(<%= i %>)">Edit</button>
-              </div>
-              <div class="card-body">
-                <small class="text-muted" >Created <%= timeSince(keys[i].createdAt) %> ago</small>
-                <p id="<%= keys[i].key %>"><%= keys[i].key %></p>
-                <form method="post" action="/key/delete">
-                  <a href="#" onclick="copyToClipboard('<%= keys[i].key %>')" class="btn btn-outline-primary" role="button">Copy to clipboard</a>
-                  <a href="/history/<%= keys[i].key %>" class="btn btn-outline-info" role="button">History</a>
-                  <input type="hidden" id="key" name="key" value="<%= keys[i].key %>">
-                  <% if (keys[i].enabled) {  %>
-                    <button class="btn btn-danger" role="button" disabled title='Please disable key to destroy it'>Destroy</button>
-                  <% } else {  %>
-                    <button class="btn btn-danger" role="button">Destroy</button>
-                  <% } %>
-                </form>
-              </div>
-            </div>
             <% } %>
           </div>
       </div>
