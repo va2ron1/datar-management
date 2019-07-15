@@ -42,6 +42,7 @@ CREATE TABLE "public"."history" (
     "key" text NOT NULL,
     "status" integer NOT NULL,
     "user" bigint NOT NULL,
+    "from" json DEFAULT '"\"\""' NOT NULL,
     CONSTRAINT "history_id" PRIMARY KEY ("id"),
     CONSTRAINT "history_user_fkey" FOREIGN KEY ("user") REFERENCES users(id) NOT DEFERRABLE
 ) WITH (oids = false);
