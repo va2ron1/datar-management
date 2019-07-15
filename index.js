@@ -171,7 +171,10 @@ app.post('/signup', [
 });
 
 app.get('/login', (req, res, next) => {
-  res.render('login');
+  if (req.session.user) {
+    return res.redirect('/keys');
+  }
+  return res.render('login');
 })
 app.post('/login', [
   // username must be an email
@@ -236,11 +239,24 @@ app.get('/keys', (req, res, next) => {
     delete req.session.success;
     delete req.session.middle;
 
-    db.query('select "createdAt", key, title, enabled from auth_keys where "user" = \'' + req.session.user + '\' order by "createdAt" desc')
+    let page = 1;
+    let queryPage = parseInt(req.query.page);
+    if (queryPage && queryPage > 0)
+      page = queryPage
+
+    db.query('select count(*) OVER() AS "count", "createdAt", key, title, enabled from auth_keys where "user" = \'' + req.session.user + '\' order by "createdAt" desc  LIMIT 5 OFFSET ' + ((page - 1) * 5))
     .then(response => {
-      return res.render('keys', {errors: error, success: success, middle: middle, timeSince: timeSince, keys: response.rows});
+      let count = 0;
+      if (response.rows.length > 0)
+        count = response.rows[0].count
+
+      const paginate = require('paginate')();
+      let pagination = paginate.page(count, 5, page);
+      const html = pagination.render({ baseUrl: '/keys' });
+      return res.render('keys', {title: 'API Keys Management', errors: error, success: success, middle: middle, timeSince: timeSince, keys: response.rows, pagination_html: html });
     })
     .catch(err => {
+      console.log(err);
       return res.render('login', {errors: "Something wrong with the server"});
     });
   } else {
@@ -253,12 +269,26 @@ let history_method = (req, res, next) => {
     let auth_key = '';
     if (req.params.auth_key)
       auth_key = 'and key = \'' + req.params.auth_key + '\'';
-    db.query('select "createdAt", key, status, "user", "from" from history where "user" = \'' + req.session.user + '\' ' + auth_key + ' order by "createdAt" desc')
+
+    let page = 1;
+    let queryPage = parseInt(req.query.page);
+    if (queryPage && queryPage > 0)
+        page = queryPage
+
+    db.query('select count(*) OVER() AS "count", "createdAt", key, status, "user", "from" from history where "user" = \'' + req.session.user + '\' ' + auth_key + ' order by "createdAt" desc LIMIT 8 OFFSET ' + ((page - 1) * 8))
     .then(response => {
-      return res.render('history', {histories: response.rows});
+      let count = 0;
+      if (response.rows.length > 0)
+        count = response.rows[0].count
+
+      const paginate = require('paginate')();
+      let pagination = paginate.page(count, 8, page);
+      const html = pagination.render({ baseUrl: '/history' });
+      return res.render('history', {title: 'Histories', histories: response.rows, pagination_html: html});
     })
     .catch(err => {
-      return res.render('login', {errors: "Something wrong with the server"});
+      req.session.error = "Something wrong with the server";
+      return res.redirect('/keys');
     });
   } else {
     return res.redirect('/login');

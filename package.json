@@ -17,11 +17,12 @@
     "express-session": "^1.16.2",
     "express-validator": "^6.1.1",
     "ibm-watson": "^4.2.2",
+    "lodash": ">=4.17.13",
+    "paginate": "github:va2ron1/paginate",
     "pg": "^7.11.0",
     "pg-hstore": "^2.3.3",
     "request": "^2.88.0",
     "sequelize": "^5.9.4",
-    "uuid": "^3.3.2",
-    "lodash": ">=4.17.13"
+    "uuid": "^3.3.2"
   }
 }
