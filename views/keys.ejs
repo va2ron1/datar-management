@@ -62,23 +62,26 @@
             <form class="ml-auto d-none" id="<%= i %>-edit" method="post" action="/key/<%= keys[i].key %>/update">
               <div class="card mb-3">
                   <div class="card-header py-3 d-flex align-items-center">
-                      <div class="mr-auto"></div>
+                      <div class="mr-auto">
+                        <div class="custom-control custom-switch">
+                          <input type="checkbox" class="custom-control-input" onchange="statusChanged(this.checked, <%= i %>)" id="staticToogle-<%= i %>" name="enabled" <%- keys[i].enabled == true ? 'checked' : '' %>>
+                          <label class="custom-control-label" for="staticToogle-<%= i %>" id="staticToogleTitle-<%= i %>"><%- keys[i].enabled == true ? 'Enabled' : 'Disabled' %></label>
+                        </div>
+                      </div>
                       <button class="btn btn-primary btn-sm mr-1" type="submit" role="button">Save</button>
                       <button class="btn btn-danger btn-sm" type="button" role="button" onclick="toogleKey(<%= i %>)">Cancel</button>
                   </div>
                   <div class="card-body">
                     <div class="form-group row">
-                      <label for="staticTitle" class="col-sm-2 col-form-label">Title</label>
-                      <div class="col-sm-10">
+                      <label for="staticTitle" class="col-sm-12 col-form-label">Title</label>
+                      <div class="col-sm-12">
                         <input type="text" class="form-control" id="staticTitle" name="title" placeholder="Application" value="<%= keys[i].title %>">
                       </div>
                     </div>
                     <div class="form-group row">
+                      <label for="staticOrigins" class="col-sm-12 col-form-label">Origins</label>
                       <div class="col-sm-12">
-                        <div class="custom-control custom-switch">
-                          <input type="checkbox" class="custom-control-input" id="staticToogle-<%= i %>" name="enabled" <%- keys[i].enabled == true ? 'checked' : '' %>>
-                          <label class="custom-control-label" for="staticToogle-<%= i %>">Enabled</label>
-                        </div>
+                        <input type="text" class="form-control" id="staticOrigins" name="origins" placeholder="*" value="<%= keys[i].origins.join(', ') %>">
                       </div>
                     </div>
                   </div>
@@ -95,8 +98,9 @@
                 <button class="ml-auto btn btn-info btn-sm" role="button" onclick="toogleKey(<%= i %>)">Edit</button>
               </div>
               <div class="card-body">
-                <small class="text-muted" >Created <%= timeSince(keys[i].createdAt) %> ago</small>
-                <p id="<%= keys[i].key %>"><%= keys[i].key %></p>
+                <small class="text-muted" >Created <%= timeSince(keys[i].createdAt) %></small>
+                <p id="<%= keys[i].key %>"><b>Key:</b> <%= keys[i].key %></p>
+                <p><b>Origins:</b> <%= keys[i].origins.join(', ') %></p>
                 <form method="post" action="/key/delete">
                   <a href="#" onclick="copyToClipboard('<%= keys[i].key %>')" class="btn btn-outline-primary" role="button">Copy to clipboard</a>
                   <a href="/history/<%= keys[i].key %>" class="btn btn-outline-info" role="button">History</a>

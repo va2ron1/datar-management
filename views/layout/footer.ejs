@@ -23,6 +23,9 @@
     editElement.classList.toggle("d-none");
     showElement.classList.toggle("d-none");
   }
+  function statusChanged(value, id) {
+    document.getElementById('staticToogleTitle-' + id).innerHTML = value ? 'Enabled' : 'Disabled';
+  }
 </script>
 </body>
 </html>

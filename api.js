@@ -1,9 +1,10 @@
 var express = require('express');
 const { Pool } = require('pg');
 const axios = require('axios');
-const dotenv = require('dotenv');
-dotenv.config();
+// Load environment variables
+require('dotenv').config();
 
+// Setup IBM Watson natural language credentials
 const NaturalLanguageUnderstandingV1 = require('ibm-watson/natural-language-understanding/v1.js');
 const naturalLanguageUnderstanding = new NaturalLanguageUnderstandingV1({
   version: process.env.IBM_WATSON_VERSION,
@@ -146,7 +147,7 @@ app.get('/v1/data/:auth_key', auth_key_cors, (req, res, next) => {
       ]
     }, undefined);
   }
-  axios.post('http://localhost:9200/watson/_search?filter_path=hits.hits._source.data&pretty=true', {
+  axios.post('http://localhost:9200/watson/_search?filter_path=hits.hits._source', {
     "_source": {
       "includes": ["data"]
     },
@@ -163,6 +164,13 @@ app.get('/v1/data/:auth_key', auth_key_cors, (req, res, next) => {
     }
   })
   .then((response) => {
+    response.data.hits.hits.forEach(function (obj, index) {
+    	obj._source['entities'] = obj._source.result.entities;
+    	obj._source['keywords'] = obj._source.result.keywords;
+    	// remove keys (maybe in the future will needed)
+    	delete obj._source.result;
+    	this[index] = obj._source;
+    }, response.data.hits.hits);
     return res.out(200, response.data.hits.hits);
   })
   .catch((error) => {
