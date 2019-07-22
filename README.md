@@ -1,3 +1,4 @@
+
 # DATAR API Keys Management
 Environment variables (.env)
 
@@ -6,9 +7,28 @@ Environment variables (.env)
     POSTGRES_USER='postgres'
     POSTGRES_PASSWORD=''
     SESSION_SECRET=''
-To start the project run:
+## Requirements
 
-		npm start
+- Linux Server (Ubuntu 18.04 recommended)
+ - [IBM Watson Natural Language Understanding API Key](https://www.ibm.com/watson/services/natural-language-understanding/)
+- Node.js v10 or later
+- PostgreSQL 10 or later
+## Setup
+```bash
+psql -U databaseUser -W databaseName < db.sql
+```
+**Note:** Remove `-W` if you do not have a password.
+## Install
+
+```bash
+npm install
+```
+
+## Usage
+
+```bash
+npm start
+```
 # Changes
 The project has been split into a few parts:
 ### Core
