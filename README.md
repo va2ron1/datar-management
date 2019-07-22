@@ -10,7 +10,6 @@ Environment variables (.env)
 ## Requirements
 
 - Linux Server (Ubuntu 18.04 recommended)
- - [IBM Watson Natural Language Understanding API Key](https://www.ibm.com/watson/services/natural-language-understanding/)
 - Node.js v10 or later
 - PostgreSQL 10 or later
 ## Setup
