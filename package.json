@@ -1,7 +1,7 @@
 {
-  "name": "datar-api",
+  "name": "datar-management",
   "version": "1.0.0",
-  "description": "api data analyzer",
+  "description": "Is a tool to exchange information decreasing at the same time the traffic of the communication antennas",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"

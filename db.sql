@@ -23,7 +23,7 @@ CREATE TABLE "public"."auth_keys" (
     "title" text DEFAULT '' NOT NULL,
     "key" text NOT NULL,
     "user" bigint NOT NULL,
-    "origins" json DEFAULT '"[\"*\"]"' NOT NULL,
+    "origins" json DEFAULT '["*"]' NOT NULL,
     "enabled" boolean DEFAULT false NOT NULL,
     CONSTRAINT "auth_keys_key" UNIQUE ("key"),
     CONSTRAINT "auth_keys_user_fkey" FOREIGN KEY ("user") REFERENCES users(id) NOT DEFERRABLE
