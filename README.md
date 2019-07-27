@@ -36,7 +36,7 @@ The project has been split into a few parts:
 - [DATAR API](https://github.com/va2ron1/datar-api)
 ### Demos
 - [Web platform](https://github.com/va2ron1/datar-web-demo) (rebuilt from scratch in Vue.js)
-- Mobile App (iOS version, Not available yet) (rebuilt from scratch)
-- Text Messaging (# Not available yet)
+- [Mobile App](https://github.com/va2ron1/datar-ios-demo) (iOS version) (rebuilt from scratch)
+- [Text Messaging](https://github.com/va2ron1/datar-sms-demo) (# Not available)
 # License
 See [Apache License 2.0](https://github.com/va2ron1/datar-node-api/blob/master/LICENSE)
