@@ -16,7 +16,7 @@
     "express": "^4.17.1",
     "express-session": "^1.16.2",
     "express-validator": "^6.1.1",
-    "lodash": ">=4.17.13",
+    "lodash": ">=4.17.19",
     "paginate": "github:va2ron1/paginate",
     "pg": "^7.11.0",
     "pg-hstore": "^2.3.3",
